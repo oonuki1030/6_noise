@@ -8,6 +8,7 @@
         _RoughnessMap ("Roughness map", 2D) = "bump" {}
         _NoiseTex ("Noise Texture", 2D) = "white" {}
         _Threshold("Threshold", Range(-1.0, 1.0)) = -1.0
+        _GradetionTex("Gradetion Texture", 2D) = "white" {}
     }
     SubShader
     {
@@ -48,6 +49,7 @@
             sampler2D _AOMap;
             sampler2D _RoughnessMap;
             sampler2D _NoiseTex;
+            sampler2D _GradetionTex;
             float _Threshold;
 
             v2f vert (appdata v)
@@ -88,7 +90,10 @@
 
                 // ノイズを使って、ディゾルブしよう
                 float fbm = tex2D(_NoiseTex, i.uv) + _Threshold;
-                //  col = ...;
+                fbm += frac(_Time.x) * 2.0 - 1.0;
+                if (1.0 < fbm)discard;
+                float4 gradetion = tex2D(_GradetionTex, float2(fbm, 0));
+                col = lerp(col, gradetion, max(0.0, fbm));
 
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
